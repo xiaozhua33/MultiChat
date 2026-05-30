@@ -83,6 +83,296 @@ const MAX_ATTACHMENTS = 4;
 const MAX_ATTACHMENT_SIZE = 8 * 1024 * 1024;
 let pendingAttachments = [];
 
+const AI_PANEL_SPLIT_SIZES_KEY = 'aiPanelSplitSizes';
+const AI_PANEL_MIN_PANE_PX = 240;
+const AI_PANEL_SPLITTER_SIZE_PX = 10;
+
+let aiPanelSplitSizes = {};
+let currentAiPanelLayoutKey = null;
+let currentAiPanelCols = [];
+let currentAiPanelRows = [];
+let currentAiPanelColumnGap = 0;
+let currentAiPanelRowGap = 0;
+
+function getAiPanelLayout(count) {
+  if (count <= 1) return { cols: 1, rows: 1 };
+  if (count === 2) return { cols: 2, rows: 1 };
+  if (count === 3) return { cols: 3, rows: 1 };
+  if (count === 4) return { cols: 2, rows: 2 };
+  return { cols: 3, rows: 2 };
+}
+
+function getAiPanelLayoutKey(layout) {
+  return `${layout.cols}x${layout.rows}`;
+}
+
+function normalizeRatios(ratios) {
+  const sum = ratios.reduce((acc, value) => acc + value, 0);
+  if (!sum) return ratios.map(() => 0);
+  return ratios.map((value) => value / sum);
+}
+
+function ensureLayoutRatios(layoutKey, layout) {
+  const existing = aiPanelSplitSizes[layoutKey];
+  if (existing && Array.isArray(existing.cols) && Array.isArray(existing.rows)) {
+    if (existing.cols.length === layout.cols && existing.rows.length === layout.rows) {
+      return {
+        cols: normalizeRatios(existing.cols.map((v) => (Number.isFinite(v) ? v : 0))),
+        rows: normalizeRatios(existing.rows.map((v) => (Number.isFinite(v) ? v : 0)))
+      };
+    }
+  }
+
+  const cols = Array.from({ length: layout.cols }, () => 1 / layout.cols);
+  const rows = Array.from({ length: layout.rows }, () => 1 / layout.rows);
+  const next = { cols, rows };
+  aiPanelSplitSizes[layoutKey] = next;
+  return next;
+}
+
+function applyMinPaneSizes(pixelSizes, available, minSize) {
+  if (available <= 0) return pixelSizes;
+  if (available < pixelSizes.length * minSize) return pixelSizes;
+
+  const sizes = pixelSizes.slice();
+  let safety = 20;
+
+  while (safety-- > 0) {
+    const tooSmallIndex = sizes.findIndex((value) => value < minSize);
+    if (tooSmallIndex === -1) break;
+
+    const deficit = minSize - sizes[tooSmallIndex];
+    let donorIndex = -1;
+    let donorValue = -Infinity;
+    sizes.forEach((value, idx) => {
+      if (idx === tooSmallIndex) return;
+      if (value > donorValue) {
+        donorValue = value;
+        donorIndex = idx;
+      }
+    });
+
+    if (donorIndex === -1 || sizes[donorIndex] - deficit < minSize) {
+      break;
+    }
+
+    sizes[tooSmallIndex] = minSize;
+    sizes[donorIndex] -= deficit;
+  }
+
+  const sum = sizes.reduce((acc, value) => acc + value, 0);
+  if (sum !== available) {
+    sizes[sizes.length - 1] += available - sum;
+  }
+
+  return sizes;
+}
+
+function ratiosToPixels(ratios, available) {
+  const normalized = normalizeRatios(ratios);
+  const pixels = normalized.map((ratio) => Math.round(ratio * available));
+  const sum = pixels.reduce((acc, value) => acc + value, 0);
+  if (pixels.length > 0 && sum !== available) {
+    pixels[pixels.length - 1] += available - sum;
+  }
+  return applyMinPaneSizes(pixels, available, AI_PANEL_MIN_PANE_PX);
+}
+
+function pixelsToRatios(pixels, available) {
+  if (!available) return pixels.map(() => 0);
+  return normalizeRatios(pixels.map((value) => value / available));
+}
+
+function getAiPanelGaps() {
+  const styles = window.getComputedStyle(aiPanel);
+  const columnGap = Number.parseFloat(styles.columnGap) || 0;
+  const rowGap = Number.parseFloat(styles.rowGap) || 0;
+  return { columnGap, rowGap };
+}
+
+function getAiPanelAvailableSize(layout) {
+  const { columnGap, rowGap } = getAiPanelGaps();
+  const availableWidth = Math.max(0, aiPanel.clientWidth - columnGap * (layout.cols - 1));
+  const availableHeight = Math.max(0, aiPanel.clientHeight - rowGap * (layout.rows - 1));
+  return { availableWidth, availableHeight, columnGap, rowGap };
+}
+
+function setAiPanelTemplates(colPixels, rowPixels) {
+  aiPanel.style.gridTemplateColumns = colPixels.map((value) => `${value}px`).join(' ');
+  aiPanel.style.gridTemplateRows = rowPixels.map((value) => `${value}px`).join(' ');
+}
+
+function updateSplitterPositions(colPixels, rowPixels, columnGap, rowGap) {
+  const verticalSplitters = aiPanel.querySelectorAll('.ai-splitter.vertical');
+  const horizontalSplitters = aiPanel.querySelectorAll('.ai-splitter.horizontal');
+
+  let cumulative = 0;
+  verticalSplitters.forEach((splitter) => {
+    const index = Number.parseInt(splitter.dataset.index, 10);
+    cumulative = colPixels.slice(0, index + 1).reduce((acc, value) => acc + value, 0);
+    const center = cumulative + columnGap * index + columnGap / 2;
+    splitter.style.left = `${center - AI_PANEL_SPLITTER_SIZE_PX / 2}px`;
+  });
+
+  cumulative = 0;
+  horizontalSplitters.forEach((splitter) => {
+    const index = Number.parseInt(splitter.dataset.index, 10);
+    cumulative = rowPixels.slice(0, index + 1).reduce((acc, value) => acc + value, 0);
+    const center = cumulative + rowGap * index + rowGap / 2;
+    splitter.style.top = `${center - AI_PANEL_SPLITTER_SIZE_PX / 2}px`;
+  });
+}
+
+function rebuildSplitters(layout) {
+  aiPanel.querySelectorAll('.ai-splitter').forEach((el) => el.remove());
+
+  if (layout.cols <= 1 && layout.rows <= 1) {
+    currentAiPanelLayoutKey = null;
+    return;
+  }
+
+  for (let i = 0; i < layout.cols - 1; i += 1) {
+    const splitter = document.createElement('div');
+    splitter.className = 'ai-splitter vertical';
+    splitter.dataset.axis = 'col';
+    splitter.dataset.index = String(i);
+    splitter.setAttribute('role', 'separator');
+    splitter.setAttribute('aria-orientation', 'vertical');
+    splitter.tabIndex = 0;
+    aiPanel.appendChild(splitter);
+  }
+
+  for (let i = 0; i < layout.rows - 1; i += 1) {
+    const splitter = document.createElement('div');
+    splitter.className = 'ai-splitter horizontal';
+    splitter.dataset.axis = 'row';
+    splitter.dataset.index = String(i);
+    splitter.setAttribute('role', 'separator');
+    splitter.setAttribute('aria-orientation', 'horizontal');
+    splitter.tabIndex = 0;
+    aiPanel.appendChild(splitter);
+  }
+}
+
+async function saveAiPanelSplitSizes() {
+  try {
+    await chrome.storage.local.set({ [AI_PANEL_SPLIT_SIZES_KEY]: aiPanelSplitSizes });
+  } catch (e) {
+    console.error('保存分割比例失败:', e);
+  }
+}
+
+function applyAiPanelResizableLayout() {
+  const layout = getAiPanelLayout(enabledAIs.length);
+  const layoutKey = getAiPanelLayoutKey(layout);
+  if (layout.cols <= 1 && layout.rows <= 1) {
+    aiPanel.querySelectorAll('.ai-splitter').forEach((el) => el.remove());
+    aiPanel.style.gridTemplateColumns = '';
+    aiPanel.style.gridTemplateRows = '';
+    currentAiPanelLayoutKey = null;
+    currentAiPanelCols = [];
+    currentAiPanelRows = [];
+    return;
+  }
+
+  const ratios = ensureLayoutRatios(layoutKey, layout);
+  aiPanelSplitSizes[layoutKey] = ratios;
+  const { availableWidth, availableHeight, columnGap, rowGap } = getAiPanelAvailableSize(layout);
+
+  const colPixels = ratiosToPixels(ratios.cols, availableWidth);
+  const rowPixels = ratiosToPixels(ratios.rows, availableHeight);
+
+  currentAiPanelLayoutKey = layoutKey;
+  currentAiPanelCols = colPixels;
+  currentAiPanelRows = rowPixels;
+  currentAiPanelColumnGap = columnGap;
+  currentAiPanelRowGap = rowGap;
+
+  setAiPanelTemplates(colPixels, rowPixels);
+  rebuildSplitters(layout);
+  updateSplitterPositions(colPixels, rowPixels, columnGap, rowGap);
+}
+
+function startSplitterDrag(splitter, pointerEvent) {
+  const axis = splitter.dataset.axis;
+  const index = Number.parseInt(splitter.dataset.index, 10);
+  if (!axis || !Number.isFinite(index)) return;
+
+  const layout = getAiPanelLayout(enabledAIs.length);
+  if (layout.cols <= 1 && layout.rows <= 1) return;
+
+  const layoutKey = getAiPanelLayoutKey(layout);
+  const ensured = ensureLayoutRatios(layoutKey, layout);
+  aiPanelSplitSizes[layoutKey] = ensured;
+  const { availableWidth, availableHeight } = getAiPanelAvailableSize(layout);
+
+  const initialCols = currentAiPanelCols.slice();
+  const initialRows = currentAiPanelRows.slice();
+  const startX = pointerEvent.clientX;
+  const startY = pointerEvent.clientY;
+
+  splitter.classList.add('is-dragging');
+  document.body.classList.add('ai-resizing');
+  aiPanel.classList.add('ai-resizing');
+
+  const onMove = (event) => {
+    if (axis === 'col') {
+      const next = initialCols.slice();
+      const total = initialCols[index] + initialCols[index + 1];
+      const delta = event.clientX - startX;
+      const minSize = AI_PANEL_MIN_PANE_PX;
+      const clamped = Math.max(minSize, Math.min(total - minSize, initialCols[index] + delta));
+      next[index] = clamped;
+      next[index + 1] = total - clamped;
+      currentAiPanelCols = next;
+      setAiPanelTemplates(next, currentAiPanelRows);
+      updateSplitterPositions(next, currentAiPanelRows, currentAiPanelColumnGap, currentAiPanelRowGap);
+      aiPanelSplitSizes[layoutKey].cols = pixelsToRatios(next, availableWidth);
+      return;
+    }
+
+    const next = initialRows.slice();
+    const total = initialRows[index] + initialRows[index + 1];
+    const delta = event.clientY - startY;
+    const minSize = AI_PANEL_MIN_PANE_PX;
+    const clamped = Math.max(minSize, Math.min(total - minSize, initialRows[index] + delta));
+    next[index] = clamped;
+    next[index + 1] = total - clamped;
+    currentAiPanelRows = next;
+    setAiPanelTemplates(currentAiPanelCols, next);
+    updateSplitterPositions(currentAiPanelCols, next, currentAiPanelColumnGap, currentAiPanelRowGap);
+    aiPanelSplitSizes[layoutKey].rows = pixelsToRatios(next, availableHeight);
+  };
+
+  const onUp = async () => {
+    splitter.classList.remove('is-dragging');
+    document.body.classList.remove('ai-resizing');
+    aiPanel.classList.remove('ai-resizing');
+    window.removeEventListener('pointermove', onMove);
+    window.removeEventListener('pointerup', onUp);
+    await saveAiPanelSplitSizes();
+  };
+
+  window.addEventListener('pointermove', onMove);
+  window.addEventListener('pointerup', onUp, { once: true });
+  splitter.setPointerCapture(pointerEvent.pointerId);
+}
+
+function setupAiPanelSplitters() {
+  aiPanel.addEventListener('pointerdown', (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) return;
+    if (!target.classList.contains('ai-splitter')) return;
+    event.preventDefault();
+    startSplitterDrag(target, event);
+  });
+
+  window.addEventListener('resize', () => {
+    if (!currentAiPanelLayoutKey) return;
+    applyAiPanelResizableLayout();
+  });
+}
+
 function fileToDataUrl(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -283,7 +573,11 @@ function createAIWrapper(aiId) {
 
 // 更新网格布局类
 function updateGridClass() {
-  aiPanel.className = `count-${enabledAIs.length}`;
+  [...aiPanel.classList].forEach((name) => {
+    if (name.startsWith('count-')) aiPanel.classList.remove(name);
+  });
+  aiPanel.classList.add(`count-${enabledAIs.length}`);
+  applyAiPanelResizableLayout();
 }
 
 // 初始化
@@ -292,6 +586,7 @@ async function init() {
   renderAiOptions();
   initialRender();
   setupEventListeners();
+  setupAiPanelSplitters();
 }
 
 // 初始渲染（第一次加载时）
@@ -307,9 +602,12 @@ function initialRender() {
 // 从 chrome.storage 加载设置
 async function loadSettings() {
   try {
-    const result = await chrome.storage.local.get('enabledAIs');
+    const result = await chrome.storage.local.get(['enabledAIs', AI_PANEL_SPLIT_SIZES_KEY]);
     if (result.enabledAIs && Array.isArray(result.enabledAIs)) {
       enabledAIs = result.enabledAIs.filter((id) => Boolean(AI_CONFIG[id]));
+    }
+    if (result[AI_PANEL_SPLIT_SIZES_KEY] && typeof result[AI_PANEL_SPLIT_SIZES_KEY] === 'object') {
+      aiPanelSplitSizes = result[AI_PANEL_SPLIT_SIZES_KEY];
     }
   } catch (e) {
     console.error('加载设置失败:', e);

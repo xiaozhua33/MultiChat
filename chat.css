@@ -161,6 +161,7 @@ html, body {
   background: var(--border-color);
   grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
   grid-auto-rows: 1fr;
+  position: relative;
   min-height: 0;
   overflow: hidden;
 }
@@ -171,6 +172,44 @@ html, body {
 #ai-panel.count-3 { grid-template-columns: repeat(3, 1fr); grid-template-rows: 1fr; }
 #ai-panel.count-4 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
 #ai-panel.count-5 { grid-template-columns: repeat(3, 1fr); grid-template-rows: 1fr 1fr; }
+#ai-panel.count-6 { grid-template-columns: repeat(3, 1fr); grid-template-rows: 1fr 1fr; }
+
+.ai-splitter {
+  position: absolute;
+  z-index: 20;
+  background: transparent;
+  touch-action: none;
+}
+
+.ai-splitter:hover {
+  background: rgba(37, 99, 235, 0.12);
+}
+
+.ai-splitter.is-dragging {
+  background: rgba(37, 99, 235, 0.18);
+}
+
+.ai-splitter.vertical {
+  top: 0;
+  bottom: 0;
+  width: 10px;
+  cursor: col-resize;
+}
+
+.ai-splitter.horizontal {
+  left: 0;
+  right: 0;
+  height: 10px;
+  cursor: row-resize;
+}
+
+body.ai-resizing {
+  user-select: none;
+}
+
+#ai-panel.ai-resizing iframe {
+  pointer-events: none;
+}
 
 .ai-frame-wrapper {
   display: flex;
