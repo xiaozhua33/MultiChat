@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MultiChat - AI 聊天聚合器</title>
+  <link rel="stylesheet" href="chat.css">
+</head>
+<body>
+  <div id="layout">
+    <!-- 顶部：标题 + AI 选择 -->
+    <header id="header">
+      <div id="header-left">
+        <h1>MultiChat</h1>
+      </div>
+      <div id="ai-options">
+        <div class="ai-options-primary" id="ai-options-primary"></div>
+        <div class="ai-options-more" id="ai-options-more">
+          <button class="ai-options-more-btn" id="ai-options-more-btn" type="button">查看更多</button>
+          <div class="ai-options-menu" id="ai-options-menu"></div>
+        </div>
+      </div>
+    </header>
+
+    <!-- 中间：AI iframe 网格容器 -->
+    <main id="ai-panel"></main>
+
+    <!-- 底部：统一输入框 -->
+    <footer id="composer">
+      <div id="composer-attachments" hidden>
+        <div id="attachment-list"></div>
+      </div>
+      <div id="composer-input-wrapper">
+        <div id="composer-tools">
+          <button id="attach-btn" type="button" title="添加图片">🗾</button>
+          <input id="image-input" type="file" accept="image/*" multiple hidden>
+        </div>
+        <textarea id="input" placeholder="输入问题，同时发给所选AI..." rows="2"></textarea>
+        <button id="send-btn">发送</button>
+      </div>
+    </footer>
+  </div>
+
+  <script src="chat.js"></script>
+</body>
+</html>
