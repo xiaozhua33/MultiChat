@@ -1,8 +1,13 @@
 {
   "manifest_version": 3,
   "name": "MultiChat",
-  "version": "0.2.0",
-  "description": "同时和多个 AI 对话的聊天聚合器",
+  "version": "1.0.0",
+  "description": "同时和多个 AI 对话的聊天聚合器 | Chat with multiple AI services side by side",
+  "icons": {
+    "16": "assets/icons/icon16.png",
+    "48": "assets/icons/icon48.png",
+    "128": "assets/icons/icon128.png"
+  },
   "background": {
     "service_worker": "background.js",
     "type": "module"
@@ -31,7 +36,12 @@
     "extension_pages": "script-src 'self'; object-src 'self'; frame-src https://chatgpt.com https://*.chatgpt.com https://chat.openai.com https://gemini.google.com https://*.gemini.google.com https://chat.deepseek.com https://*.chat.deepseek.com https://claude.ai https://*.claude.ai https://grok.com https://*.grok.com https://www.doubao.com https://*.doubao.com;"
   },
   "action": {
-    "default_title": "MultiChat"
+    "default_title": "MultiChat",
+    "default_icon": {
+      "16": "assets/icons/icon16.png",
+      "48": "assets/icons/icon48.png",
+      "128": "assets/icons/icon128.png"
+    }
   },
   "content_scripts": [
     {
@@ -58,7 +68,7 @@
   "declarative_net_request": {
     "rule_resources": [
       {
-        "id": "chaojia-frame-rules",
+        "id": "multichat-frame-rules",
         "enabled": true,
         "path": "frame-rules.json"
       }

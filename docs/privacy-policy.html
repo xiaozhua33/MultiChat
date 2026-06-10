@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MultiChat - Privacy Policy / 隐私政策</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      line-height: 1.7;
+      color: #1a1a2e;
+      background: #f8f9fb;
+      padding: 40px 20px;
+    }
+    .container {
+      max-width: 760px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 12px;
+      padding: 48px 40px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    }
+    h1 {
+      font-size: 28px;
+      margin-bottom: 8px;
+      color: #1a1a2e;
+    }
+    .subtitle {
+      font-size: 14px;
+      color: #6b7280;
+      margin-bottom: 36px;
+    }
+    h2 {
+      font-size: 20px;
+      margin: 32px 0 12px;
+      color: #374151;
+      border-bottom: 2px solid #e5e7eb;
+      padding-bottom: 6px;
+    }
+    h3 {
+      font-size: 16px;
+      margin: 20px 0 8px;
+      color: #4b5563;
+    }
+    p, li {
+      font-size: 15px;
+      color: #374151;
+      margin-bottom: 10px;
+    }
+    ul { padding-left: 24px; }
+    .highlight {
+      background: #f0fdf4;
+      border-left: 4px solid #10b981;
+      padding: 12px 16px;
+      border-radius: 6px;
+      margin: 12px 0;
+      font-weight: 500;
+    }
+    .divider {
+      border: none;
+      border-top: 1px dashed #d1d5db;
+      margin: 40px 0;
+    }
+    .footer {
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid #e5e7eb;
+      font-size: 13px;
+      color: #9ca3af;
+    }
+    .footer a { color: #6366f1; text-decoration: none; }
+    .footer a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>MultiChat 隐私政策</h1>
+    <p class="subtitle">Privacy Policy &nbsp;·&nbsp; 最后更新 / Last updated: 2026-06-10</p>
+
+    <!-- ===== 中文部分 ===== -->
+
+    <div class="highlight">
+      本扩展<strong>不收集、不传输、不存储</strong>任何用户个人数据到外部服务器。所有数据仅保存在您的本地浏览器中。
+    </div>
+
+    <h2>1. 概述</h2>
+    <p>MultiChat 是一款 Chrome 浏览器扩展，允许用户在一个页面中同时与多个 AI 服务（ChatGPT、Gemini、DeepSeek、Claude、Grok、豆包）进行对话。</p>
+
+    <h2>2. 数据收集</h2>
+    <div class="highlight">本扩展不收集任何用户数据。</div>
+    <ul>
+      <li>不收集浏览历史</li>
+      <li>不收集个人信息（姓名、邮箱、身份证号等）</li>
+      <li>不使用任何分析、追踪或广告服务</li>
+      <li>没有外部服务器，没有后端 API</li>
+      <li>不读取、不记录、不传输用户与 AI 服务的对话内容</li>
+    </ul>
+
+    <h2>3. 本地存储</h2>
+    <p>扩展使用 <code>chrome.storage.local</code> 仅存储以下本地偏好设置：</p>
+    <ul>
+      <li><strong>enabledAIs</strong>：用户选择启用的 AI 服务列表</li>
+      <li><strong>aiPanelSplitSizes</strong>：AI 面板窗格的分割比例</li>
+    </ul>
+    <p>这些数据仅存储在您的本地浏览器中，不会传输到任何外部服务器。卸载扩展后，这些数据将被自动清除。</p>
+
+    <h2>4. iframe 嵌入机制</h2>
+    <p>扩展使用 Chrome 的 <code>declarativeNetRequest</code> API 修改特定 AI 服务网站的 HTTP 响应头：</p>
+    <ul>
+      <li>移除 <code>X-Frame-Options</code> 和 <code>Content-Security-Policy</code> 响应头</li>
+      <li>此修改<strong>仅限于 sub_frame（子框架）类型</strong>的请求，不影响您正常浏览这些网站</li>
+      <li>目的是允许在扩展页面中以 iframe 方式显示这些 AI 服务</li>
+    </ul>
+    <p>扩展的 Content Script 会注入到 AI 网站的 iframe 中，用于自动填充文本和点击发送按钮。所有操作均在您的本地浏览器中完成。</p>
+
+    <h2>5. 数据共享</h2>
+    <div class="highlight">本扩展不与任何第三方共享用户数据。不出售用户数据，不使用用户数据进行广告投放。</div>
+
+    <h2>6. 第三方服务</h2>
+    <p>扩展内嵌的 AI 服务（ChatGPT、Gemini、DeepSeek、Claude、Grok、豆包）各自有其独立的隐私政策和服务条款。您与这些 AI 服务的对话内容受各服务自身隐私政策的约束。</p>
+    <p>本扩展不对第三方 AI 服务的数据处理行为承担责任。</p>
+
+    <h2>7. 权限说明</h2>
+    <ul>
+      <li><strong>storage</strong>：保存扩展的本地偏好设置（已启用的 AI 列表、面板分割比例）</li>
+      <li><strong>tabs</strong>：在扩展页面和 AI 服务页面之间传递消息，管理标签页</li>
+      <li><strong>declarativeNetRequest</strong>：移除 AI 服务网站的 iframe 嵌入限制，以实现核心功能</li>
+      <li><strong>host_permissions</strong>：仅限于扩展所支持的 6 个 AI 服务域名</li>
+    </ul>
+
+    <h2>8. 数据安全</h2>
+    <p>所有数据均存储在本地浏览器中，不进行任何网络传输，因此不存在数据传输安全风险。您可以随时通过卸载扩展来删除所有本地数据。</p>
+
+    <h2>9. 免责声明</h2>
+    <p>MultiChat 与任何 AI 服务<strong>无关联、无合作、无背书关系</strong>。用户须自行在各 AI 服务网站注册并登录账号。所有 AI 服务的名称和标识均为其各自所有者的商标，本扩展中的使用仅用于功能识别目的，不构成任何形式的代言或认可。</p>
+
+    <h2>10. 联系我们</h2>
+    <p>如有任何隐私相关问题或疑问，请通过以下方式联系：</p>
+    <ul>
+      <li>GitHub 仓库：<a href="https://github.com/xiaozhua33/MultiChat">https://github.com/xiaozhua33/MultiChat</a></li>
+      <li>问题反馈：<a href="https://github.com/xiaozhua33/MultiChat/issues">https://github.com/xiaozhua33/MultiChat/issues</a></li>
+    </ul>
+
+    <hr class="divider">
+
+    <!-- ===== English Section ===== -->
+
+    <h1 style="font-size: 22px;">MultiChat Privacy Policy</h1>
+    <p class="subtitle">Last updated: June 10, 2026</p>
+
+    <div class="highlight">
+      This extension <strong>does not collect, transmit, or store</strong> any user personal data to external servers. All data is stored locally in your browser only.
+    </div>
+
+    <h2>1. Overview</h2>
+    <p>MultiChat is a Chrome browser extension that allows users to chat with multiple AI services (ChatGPT, Gemini, DeepSeek, Claude, Grok, Doubao) simultaneously in a single page.</p>
+
+    <h2>2. Data Collection</h2>
+    <div class="highlight">This extension does not collect any user data.</div>
+    <ul>
+      <li>No browsing history is collected</li>
+      <li>No personal information is collected (names, emails, IDs, etc.)</li>
+      <li>No analytics, tracking, or advertising services are used</li>
+      <li>No external servers or backend APIs</li>
+      <li>User conversations with AI services are not read, recorded, or transmitted</li>
+    </ul>
+
+    <h2>3. Local Storage</h2>
+    <p>The extension uses <code>chrome.storage.local</code> to store only the following local preferences:</p>
+    <ul>
+      <li><strong>enabledAIs</strong>: List of AI services selected by the user</li>
+      <li><strong>aiPanelSplitSizes</strong>: Panel split ratios for the AI window layout</li>
+    </ul>
+    <p>This data is stored locally in your browser only and is never transmitted to any external server. Uninstalling the extension automatically removes this data.</p>
+
+    <h2>4. iframe Embedding Mechanism</h2>
+    <p>The extension uses Chrome's <code>declarativeNetRequest</code> API to modify HTTP response headers of specific AI service websites:</p>
+    <ul>
+      <li>Removes <code>X-Frame-Options</code> and <code>Content-Security-Policy</code> response headers</li>
+      <li>This modification applies <strong>only to sub_frame resource types</strong> and does not affect your normal browsing of these websites</li>
+      <li>The purpose is to allow embedding these AI services as iframes within the extension page</li>
+    </ul>
+    <p>Content Scripts are injected into the AI website iframes to auto-fill text and click send buttons. All operations are performed locally in your browser.</p>
+
+    <h2>5. Data Sharing</h2>
+    <div class="highlight">This extension does not share user data with any third party. User data is not sold or used for advertising.</div>
+
+    <h2>6. Third-Party Services</h2>
+    <p>The embedded AI services (ChatGPT, Gemini, DeepSeek, Claude, Grok, Doubao) each have their own independent privacy policies and terms of service. Your conversations with these services are governed by their respective privacy policies.</p>
+    <p>This extension is not responsible for the data handling practices of third-party AI services.</p>
+
+    <h2>7. Permissions</h2>
+    <ul>
+      <li><strong>storage</strong>: Saves local preferences (enabled AI list, panel split ratios)</li>
+      <li><strong>tabs</strong>: Routes messages between the extension page and AI service pages</li>
+      <li><strong>declarativeNetRequest</strong>: Removes iframe embedding restrictions on AI service websites to enable core functionality</li>
+      <li><strong>host_permissions</strong>: Limited to the 6 supported AI service domains only</li>
+    </ul>
+
+    <h2>8. Data Security</h2>
+    <p>All data is stored locally in your browser with no network transmission, eliminating data transmission security risks. You can remove all local data at any time by uninstalling the extension.</p>
+
+    <h2>9. Disclaimer</h2>
+    <p>MultiChat is <strong>not affiliated with, endorsed by, or sponsored by</strong> any of the supported AI services. Users must register and log into their own accounts on each AI service website. All AI service names and logos are trademarks of their respective owners. Their use in this extension is for identification purposes only and does not imply endorsement.</p>
+
+    <h2>10. Contact</h2>
+    <p>For any privacy-related questions or concerns:</p>
+    <ul>
+      <li>GitHub Repository: <a href="https://github.com/xiaozhua33/MultiChat">https://github.com/xiaozhua33/MultiChat</a></li>
+      <li>Issue Tracker: <a href="https://github.com/xiaozhua33/MultiChat/issues">https://github.com/xiaozhua33/MultiChat/issues</a></li>
+    </ul>
+
+    <div class="footer">
+      <p>&copy; 2026 MultiChat. This privacy policy applies to the MultiChat Chrome extension only.</p>
+      <p>
+        <a href="https://github.com/xiaozhua33/MultiChat">GitHub</a> &nbsp;·&nbsp;
+        <a href="https://github.com/xiaozhua33/MultiChat/issues">Report an Issue</a>
+      </p>
+    </div>
+  </div>
+</body>
+</html>

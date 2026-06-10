@@ -590,7 +590,7 @@
 
     function reportDebug(detail) {
       try {
-        window.__CHAOJIA_CLAUDE_LAST_DEBUG__ = detail;
+        window.__MULTICHAT_CLAUDE_LAST_DEBUG__ = detail;
       } catch {}
       chrome.runtime.sendMessage({
         type: "ROLE_STATUS",
@@ -982,8 +982,8 @@ function getActiveChatSiteAdapter() {
   }
 
   // 主入口
-  if (typeof window.__CHAOJIA_LOADED__ === "undefined") {
-    window.__CHAOJIA_LOADED__ = true;
+  if (typeof window.__MULTICHAT_LOADED__ === "undefined") {
+    window.__MULTICHAT_LOADED__ = true;
     if (window.parent !== window) {
       const siteAdapter = getActiveChatSiteAdapter();
       if (siteAdapter) {
@@ -1007,7 +1007,7 @@ function getActiveChatSiteAdapter() {
                 sendResponse({ ok: true, skipped: true });
                 return;
               }
-              const lockKey = "__CHAOJIA_CLAUDE_ACTIVE_FRAME__";
+              const lockKey = "__MULTICHAT_CLAUDE_ACTIVE_FRAME__";
               try {
                 if (window.top && window.top[lockKey] && window.top[lockKey] !== window) {
                   sendResponse({ ok: true, skipped: true });
@@ -1030,7 +1030,7 @@ function getActiveChatSiteAdapter() {
             siteAdapter.fillAndSend(content, autoSend, attachments).catch((err) => {
               console.error("[MultiChat] fillAndSend failed:", err);
               replyObserver.stop();
-              const lastDebug = siteAdapter.id === "claude" ? window.__CHAOJIA_CLAUDE_LAST_DEBUG__ : "";
+              const lastDebug = siteAdapter.id === "claude" ? window.__MULTICHAT_CLAUDE_LAST_DEBUG__ : "";
               chrome.runtime.sendMessage({
                 type: "ROLE_STATUS",
                 site: siteAdapter.id,
